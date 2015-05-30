@@ -70,7 +70,20 @@ TerminalWidget::TerminalWidget(QWidget *parent)
 	connect(rbTxHex, SIGNAL(toggled(bool)), this, SLOT(inputFormatchanged()));
 	connect(rbTxBin, SIGNAL(toggled(bool)), this, SLOT(inputFormatchanged()));
 
+	connect(pbClearTx, SIGNAL(clicked(bool)), this, SLOT(clearTxEcho()));
+	connect(pbClearRx, SIGNAL(clicked(bool)), this, SLOT(clearRxEcho()));
+
     updatePorts();
+}
+
+void TerminalWidget::clearTxEcho()
+{
+	plainTextEditTxPrevious->clear();
+}
+
+void TerminalWidget::clearRxEcho()
+{
+	plainTextEditRx->clear();
 }
 
 void TerminalWidget::updatePorts()
@@ -157,6 +170,7 @@ void TerminalWidget::enableRx(const bool enable)
 	rbRxHex->setEnabled(enable);
 	rbRxBin->setEnabled(enable);
 	lbRxDisplay->setEnabled(enable);
+	pbClearRx->setEnabled(enable);
 }
 
 void TerminalWidget::enableTx(const bool enable)
@@ -168,6 +182,7 @@ void TerminalWidget::enableTx(const bool enable)
 	pushButtonSend->setEnabled(enable);
 	cbSendCR->setEnabled(enable ? rbTxText->isChecked() : enable);
 	cbSendLF->setEnabled(enable ? rbTxText->isChecked() : enable);
+	pbClearTx->setEnabled(enable);
 }
 
 //--------------------------------------------------------------------------------------

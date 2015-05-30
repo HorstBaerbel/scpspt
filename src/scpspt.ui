@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>651</width>
-    <height>302</height>
+    <width>653</width>
+    <height>371</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -162,7 +162,7 @@
      <property name="title">
       <string>Tx</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,1,0,0">
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,1,0,0">
       <item>
        <widget class="QLabel" name="label_7">
         <property name="text">
@@ -180,6 +180,16 @@
         </property>
         <property name="readOnly">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pbClearTx">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>clear</string>
         </property>
        </widget>
       </item>
@@ -308,6 +318,16 @@
         </property>
         <property name="readOnly">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pbClearRx">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>clear</string>
         </property>
        </widget>
       </item>

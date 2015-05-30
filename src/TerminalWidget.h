@@ -50,6 +50,8 @@ private slots:
     void disconnectFromPort();
 	void inputTextChanged();
 	void inputFormatchanged();
+	void clearTxEcho();
+	void clearRxEcho();
 
     void sendText();
     void receiveText();
