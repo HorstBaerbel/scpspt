@@ -1,3 +1,8 @@
+#build file folder
+build
+Debug
+Release
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
