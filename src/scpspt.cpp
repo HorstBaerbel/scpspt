@@ -1,5 +1,5 @@
 
-#include <QApplication.h>
+#include <QtWidgets/QApplication>
 
 #include "TerminalWidget.h"
 

@@ -1,7 +1,7 @@
 #include "TerminalWidget.h"
 
-#include <QMessageBox>
-#include <QScrollBar>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QScrollBar>
 #include <inttypes.h>
 
 
@@ -116,19 +116,19 @@ void TerminalWidget::connectToPort()
 {
     if (!m_port.isOpen()) {
         m_port.setPortName(comboBoxPort->currentText());
-        m_port.setBaudRate(comboBoxBaudrate->itemData(comboBoxBaudrate->currentIndex()).toInt());
-        m_port.setDataBits((QSerialPort::DataBits)comboBoxDatabits->itemData(comboBoxDatabits->currentIndex()).toInt());
-		m_port.setParity((QSerialPort::Parity)comboBoxParity->itemData(comboBoxParity->currentIndex()).toInt());
-		m_port.setStopBits((QSerialPort::StopBits)comboBoxStopbits->itemData(comboBoxStopbits->currentIndex()).toInt());
-		m_port.setFlowControl((QSerialPort::FlowControl)comboBoxFlowcontrol->itemData(comboBoxFlowcontrol->currentIndex()).toInt());
-		const bool openedOk = m_port.open(QIODevice::ReadWrite);
+        const bool openedOk = m_port.open(QIODevice::ReadWrite);
+        if (openedOk) {
+            m_port.setBaudRate(comboBoxBaudrate->itemData(comboBoxBaudrate->currentIndex()).toInt());
+            m_port.setDataBits((QSerialPort::DataBits)comboBoxDatabits->itemData(comboBoxDatabits->currentIndex()).toInt());
+		    m_port.setParity((QSerialPort::Parity)comboBoxParity->itemData(comboBoxParity->currentIndex()).toInt());
+		    m_port.setStopBits((QSerialPort::StopBits)comboBoxStopbits->itemData(comboBoxStopbits->currentIndex()).toInt());
+		    m_port.setFlowControl((QSerialPort::FlowControl)comboBoxFlowcontrol->itemData(comboBoxFlowcontrol->currentIndex()).toInt());
+			connect(&m_port, SIGNAL(readyRead()), this, SLOT(receiveText()));
+        }
         enableConnect(!openedOk);
         enablePortSelection(!openedOk);
         enableRx(openedOk);
 		enableTx(openedOk);
-        if (openedOk) {
-			connect(&m_port, SIGNAL(readyRead()), this, SLOT(receiveText()));
-        }
     }
 }
 
