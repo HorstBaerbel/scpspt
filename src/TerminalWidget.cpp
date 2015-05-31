@@ -354,15 +354,15 @@ void TerminalWidget::sendText()
 		QByteArray data;
 		if (rbTxText->isChecked())
 		{
-			data = text.toLocal8Bit();
 			if (cbSendCR->isChecked())
 			{
-				data.append(0x0D);
+				text.append('\r');
 			}
 			if (cbSendLF->isChecked())
 			{
-				data.append(0x0A);
+				text.append('\n');
 			}
+			data = text.toLocal8Bit();
 		}
 		else if (rbTxHex->isChecked())
 		{
@@ -382,7 +382,7 @@ void TerminalWidget::sendText()
 			if (echoText.length() > 2048) {
 				echoText = echoText.right(2048);
 			}
-			plainTextEditTxPrevious->setPlainText(echoText + plainTextEditTx->toPlainText());
+			plainTextEditTxPrevious->setPlainText(echoText + text);
 			QScrollBar *sb = plainTextEditTxPrevious->verticalScrollBar();
 			sb->setValue(sb->maximum());
 		}
