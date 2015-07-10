@@ -2,6 +2,7 @@
 
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QScrollBar>
+#include <QtWidgets/QMenu>
 #include <inttypes.h>
 
 
@@ -34,23 +35,21 @@ TerminalWidget::TerminalWidget(QWidget *parent)
     : QWidget(parent)
 {
     setupUi(this);
-
+	//install event filter on send text input for history popup
+	plainTextEditTx->installEventFilter(this);
 	//add version to title
 	setWindowTitle(windowTitle() + " v" + m_version);
-
 	//set up regular expressions for hex and binary matching
 	m_hexTextExp.setPattern("\\b[0-9a-fA-F]{2}\\b");
 	//m_hexTextExp.setMinimal(true);
 	m_binTextExp.setPattern("\\b[0-1]{8}\\b");
 	//m_binTextExp.setMinimal(true);
-
     //fill baudrate information etc.
     fillComboBox(comboBoxBaudrate, Baudrates);
     fillComboBox(comboBoxDatabits, Databits);
     fillComboBox(comboBoxParity, Parity);
     fillComboBox(comboBoxStopbits, Stopbits);
     fillComboBox(comboBoxFlowcontrol, Flowcontrol);
-
 	//restrict baud rate combobox to integers
 	m_baudRateValidator = new QIntValidator(110, 1382400, this);
 	comboBoxBaudrate->setValidator(m_baudRateValidator);
@@ -58,22 +57,27 @@ TerminalWidget::TerminalWidget(QWidget *parent)
 	comboBoxBaudrate->setCurrentIndex(6);
 	//set stop bits to default of 8
 	comboBoxDatabits->setCurrentIndex(3);
-
+	//connect signals for port settings
     connect(comboBoxPort, SIGNAL(currentIndexChanged(const QString &)), this, SLOT(portSelectionChanged(const QString &)));
 	connect(pbUpdatePorts, SIGNAL(clicked(bool)), this, SLOT(updatePorts()));
     connect(pushButtonConnect, SIGNAL(clicked(bool)), this, SLOT(connectToPort()));
     connect(pushButtonDisconnect, SIGNAL(clicked(bool)), this, SLOT(disconnectFromPort()));
     connect(pushButtonSend, SIGNAL(clicked(bool)), this, SLOT(sendText()));
-
+	//connect signals for TX text
 	connect(plainTextEditTx, SIGNAL(textChanged()), this, SLOT(inputTextChanged()));
 	connect(rbTxText, SIGNAL(toggled(bool)), this, SLOT(inputFormatchanged()));
 	connect(rbTxHex, SIGNAL(toggled(bool)), this, SLOT(inputFormatchanged()));
 	connect(rbTxBin, SIGNAL(toggled(bool)), this, SLOT(inputFormatchanged()));
-
+	//connect signals from clear buttons
 	connect(pbClearTx, SIGNAL(clicked(bool)), this, SLOT(clearTxEcho()));
 	connect(pbClearRx, SIGNAL(clicked(bool)), this, SLOT(clearRxEcho()));
-
+	//fill serial port list
     updatePorts();
+}
+
+TerminalWidget::~TerminalWidget(void)
+{
+	disconnectFromPort();
 }
 
 void TerminalWidget::clearTxEcho()
@@ -351,6 +355,8 @@ void TerminalWidget::sendText()
 		enableTx(false);
 		//convert text to format given via radio buttons
 		QString text = plainTextEditTx->toPlainText();
+		//store in history
+		m_sendHistory.append(text);
 		QByteArray data;
 		if (rbTxText->isChecked())
 		{
@@ -388,6 +394,7 @@ void TerminalWidget::sendText()
 		}
 		enableTx(true);
         plainTextEditTx->clear();
+		plainTextEditTx->setFocus();
     }
 }
 
@@ -417,10 +424,75 @@ void TerminalWidget::receiveText()
             QScrollBar *sb = plainTextEditRx->verticalScrollBar();
             sb->setValue(sb->maximum());
         }
-    }
+	}
 }
 
-TerminalWidget::~TerminalWidget(void)
+//--------------------------------------------------------------------------------------
+
+void TerminalWidget::historyEntrySelected()
 {
-    disconnectFromPort();
+	QAction * action = qobject_cast<QAction*>(sender());
+	if (action)
+	{
+		//set text in text edit
+		plainTextEditTx->setPlainText(action->data().toString());
+		plainTextEditTx->moveCursor(QTextCursor::End);
+	}
+}
+
+bool TerminalWidget::eventFilter(QObject *obj, QEvent *event)
+{
+	if (obj == plainTextEditTx)
+	{
+		if (event->type() == QEvent::KeyPress)
+		{
+			QKeyEvent * keyEvent = static_cast<QKeyEvent *>(event);
+			if (keyEvent->key() == Qt::Key_Up)
+			{
+				//if we move the cursor up and it stays at the same position, we're at the top...
+				QTextCursor cursor = plainTextEditTx->textCursor();
+				int before = cursor.position();
+				cursor.movePosition(QTextCursor::Up);
+				int after = cursor.position();
+				//check if the cursor is at the top and we have a history
+				if (before == after && m_sendHistory.size() > 0)
+				{
+					//first run event filter
+					bool result = QObject::eventFilter(obj, event);
+					//build history menu
+					QAction * action = nullptr;
+					QMenu * menu = new QMenu(this);
+					for (QString s : m_sendHistory)
+					{
+						//add text, eliding the text if necessary
+						QString displayText = s;
+						if (displayText.length() > 15)
+						{
+							displayText = displayText.left(15) + "...";
+						}
+						action = menu->addAction(QIcon(":/emblem-symbolic-link.png"), displayText, this, SLOT(historyEntrySelected()));
+						action->setData(s);
+					}
+					//add current text
+					QString displayText = plainTextEditTx->toPlainText();
+					if (displayText.length() > 0 && displayText != m_sendHistory.last())
+					{
+						if (displayText.length() > 15)
+						{
+							displayText = displayText.left(15) + "...";
+						}
+						action = menu->addAction(QIcon(":/emblem-symbolic-link.png"), displayText, this, SLOT(historyEntrySelected()));
+						action->setData(plainTextEditTx->toPlainText());
+					}
+					//show menu and select current text by default
+					QRect cursorRect = plainTextEditTx->cursorRect(plainTextEditTx->textCursor());
+					menu->popup(plainTextEditTx->mapToGlobal(cursorRect.topLeft()), action);
+					menu->setActiveAction(action);
+					return result;
+				}
+			}
+		}
+	}
+	//do standard event processing
+	return QObject::eventFilter(obj, event);
 }

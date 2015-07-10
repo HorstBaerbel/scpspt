@@ -1,6 +1,7 @@
 scpspt
 ========
-Is a simple cross-platform serial port terminal, thus the name...
+Is a simple cross-platform serial port terminal, thus the name...  
+Should at least work on Windows 7 and Ubuntu 14.04. If you make it compile in MacOS, pull requests are welcome.
 
 License
 ========
@@ -18,7 +19,7 @@ make
 </pre>
 
 The Qt framework version 5.3 or higher is required for GUI and serial port functionality. Make sure your CMAKE_PREFIX_PATH is set to the proper Qt installation or use the CMake GUI to configure (actually simpler).  
-G++ 4.7 or higher (for C++11) will be needed to compile NerDisco. For installing G++ 4.7 see [here](http://lektiondestages.blogspot.de/2013/05/installing-and-switching-gccg-versions.html).
+G++ 4.7 or higher (for C++11) will be needed to compile scpspt. For installing G++ 4.7 see [here](http://lektiondestages.blogspot.de/2013/05/installing-and-switching-gccg-versions.html).
 
 Overview
 ========

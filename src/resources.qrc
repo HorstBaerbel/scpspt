@@ -1,6 +1,7 @@
 <RCC>
-  <qresource prefix="/">
-    <file>utilities-terminal.png</file>
-    <file>view-refresh.png</file>
-  </qresource>
+    <qresource prefix="/">
+        <file>utilities-terminal.png</file>
+        <file>view-refresh.png</file>
+        <file>emblem-symbolic-link.png</file>
+    </qresource>
 </RCC>

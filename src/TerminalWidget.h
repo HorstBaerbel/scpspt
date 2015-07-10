@@ -19,6 +19,7 @@ class TerminalWidget : public QWidget, private Ui::TerminalWidget
     QSerialPort m_port;
     QTimer m_timer;
 	QIntValidator * m_baudRateValidator;
+	QStringList m_sendHistory;
 
 	QRegExp m_hexTextExp;
 	QRegExp m_binTextExp;
@@ -43,6 +44,9 @@ public:
     TerminalWidget(QWidget *parent = nullptr);
     ~TerminalWidget(void);
 
+protected:
+	bool eventFilter(QObject *obj, QEvent *event);
+
 private slots:
     void updatePorts();
     void portSelectionChanged(const QString & text);
@@ -52,7 +56,7 @@ private slots:
 	void inputFormatchanged();
 	void clearTxEcho();
 	void clearRxEcho();
-
+	void historyEntrySelected();
     void sendText();
     void receiveText();
 };
