@@ -186,6 +186,7 @@ void TerminalWidget::enableTx(const bool enable)
 	pushButtonSend->setEnabled(enable);
 	cbSendCR->setEnabled(enable ? rbTxText->isChecked() : enable);
 	cbSendLF->setEnabled(enable ? rbTxText->isChecked() : enable);
+	cbSendOnReturn->setEnabled(enable);
 	pbClearTx->setEnabled(enable);
 }
 
@@ -489,6 +490,14 @@ bool TerminalWidget::eventFilter(QObject *obj, QEvent *event)
 					menu->popup(plainTextEditTx->mapToGlobal(cursorRect.topLeft()), action);
 					menu->setActiveAction(action);
 					return result;
+				}
+			}
+			else if (keyEvent->key() == Qt::Key_Return)
+			{
+				if (cbSendOnReturn->isChecked())
+				{
+					sendText();
+					return true;
 				}
 			}
 		}
