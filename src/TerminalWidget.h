@@ -14,7 +14,7 @@ class TerminalWidget : public QWidget, private Ui::TerminalWidget
 {
 	Q_OBJECT
 
-	const char * m_version = "0.7";
+	const char * m_version = "1.0";
     QSerialPortInfo m_portInfo;
     QSerialPort m_port;
     QTimer m_timer;
