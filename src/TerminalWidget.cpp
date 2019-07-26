@@ -20,6 +20,9 @@ const TerminalWidget::StringValue TerminalWidget::Stopbits[] = {
 const TerminalWidget::StringValue TerminalWidget::Flowcontrol[] = {
 	{ "None", QSerialPort::NoFlowControl }, { "Hardware (RTS/CTS)", QSerialPort::HardwareControl }, { "Software (XON/XOFF)", QSerialPort::SoftwareControl }, { nullptr, 0 } };
 
+const QString TerminalWidget::HexTextExpString = QStringLiteral("\\b[0-9a-fA-F]{2}\\b");
+const QString TerminalWidget::BinTextExpString = QStringLiteral("\\b[0-1]{8}\\b");
+const QString TerminalWidget::ConsoleColorExpString = QStringLiteral("\\e\\[(\\d);?(\\d*)m");
 
 void fillComboBox(QComboBox * comboBox, const TerminalWidget::StringValue list[])
 {
@@ -40,10 +43,11 @@ TerminalWidget::TerminalWidget(QWidget *parent)
 	//add version to title
 	setWindowTitle(windowTitle() + " v" + m_version);
 	//set up regular expressions for hex and binary matching
-	m_hexTextExp.setPattern("\\b[0-9a-fA-F]{2}\\b");
+	m_hexTextExp.setPattern(HexTextExpString);
 	//m_hexTextExp.setMinimal(true);
-	m_binTextExp.setPattern("\\b[0-1]{8}\\b");
+	m_binTextExp.setPattern(BinTextExpString);
 	//m_binTextExp.setMinimal(true);
+	m_consoleColorExp.setPattern(ConsoleColorExpString);
     //fill baudrate information etc.
     fillComboBox(comboBoxBaudrate, Baudrates);
     fillComboBox(comboBoxDatabits, Databits);
@@ -192,59 +196,49 @@ void TerminalWidget::enableTx(const bool enable)
 
 //--------------------------------------------------------------------------------------
 
-bool canConvertText(const QString & text, const QRegExp & expression)
+bool canConvertText(const QString & text, const QRegularExpression & exp)
 {
 	const int lengthWithoutWhitspace = text.simplified().replace(" ", "").length();
 	if (lengthWithoutWhitspace > 0)
 	{
-		//check if we have an exact match
-		if (expression.exactMatch(text))
+		// check if we have an exact match
+		auto matches = exp.match(text);
+		if (matches.hasMatch())
 		{
 			return true;
 		}
-		//try matching
-		int pos = 0;
-		QString capturedText;
-		while ((pos = expression.indexIn(text, pos)) != -1)
+		// try matching individual parts and sum lengths
+		int capturedLength = 0;
+		for (const auto & text : matches.capturedTexts())
 		{
-			capturedText.append(expression.cap(0));
-			pos += expression.matchedLength();
+			capturedLength += text.size();
 		}
 		//check if the size of the matches is the size of the string minus its whitespaces
-		return (capturedText.length() == lengthWithoutWhitspace);
+		return (capturedLength == lengthWithoutWhitspace);
 	}
 	return false;
 }
 
-QByteArray convertTextToData(const QString & text, const QRegExp & expression, const int base = 10)
+QByteArray convertTextToData(const QString & text, const QRegularExpression & exp, const int base = 10)
 {
 	const int lengthWithoutWhitspace = text.simplified().replace(" ", "").length();
 	if (lengthWithoutWhitspace > 0)
 	{
-		expression.exactMatch(text);
 		QByteArray result;
-		//try matching
-		int pos = 0;
-		QStringList list;
-		while ((pos = expression.indexIn(text, pos)) != -1)
+		// try matching
+		auto matches = exp.match(text);
+		if (matches.hasMatch() || matches.hasPartialMatch())
 		{
-			list.append(expression.cap(0));
-			pos += expression.matchedLength();
-		}
-		if (list.length() >= 1)
-		{
-			QStringList::const_iterator it = list.cbegin();
-			while (it != list.end())
+			for (const auto & text : matches.capturedTexts())
 			{
-				//convert match from string to byte
+				// convert match from string to byte
 				bool worked = false;
-				unsigned char value = it->toInt(&worked, base);
+				unsigned char value = text.toInt(&worked, base);
 				if (!worked)
 				{
 					throw std::runtime_error("Input text contains bad strings!");
 				}
 				result.append(value);
-				++it;
 			}
 			return result;
 		}
@@ -406,13 +400,16 @@ void TerminalWidget::receiveText()
         if (data.size() > 0) {
 			//get current text from text edit
             QString text = plainTextEditRx->toPlainText();
-            if (text.length() > 2048) {
-                text = text.right(2048);
+            if (text.length() > 16384) {
+                text = text.right(16384);
             }
 			//convert to format selected
 			if (rbRxText->isChecked())
 			{
-				plainTextEditRx->setPlainText(text + data);
+				// check if color commands are conatained
+				QString textData = QString::fromLatin1(data);
+				textData.replace(m_consoleColorExp, "");
+				plainTextEditRx->setPlainText(text + textData);
 			}
 			else if (rbRxHex->isChecked())
 			{

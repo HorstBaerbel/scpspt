@@ -4,6 +4,7 @@
 #include <QtGui/QKeyEvent>
 #include <QApplication>
 #include <QtCore/QTimer>
+#include <QtCore/QRegularExpression>
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
 
@@ -13,21 +14,6 @@
 class TerminalWidget : public QWidget, private Ui::TerminalWidget
 {
 	Q_OBJECT
-
-	const char * m_version = "1.0";
-    QSerialPortInfo m_portInfo;
-    QSerialPort m_port;
-    QTimer m_timer;
-	QIntValidator * m_baudRateValidator;
-	QStringList m_sendHistory;
-
-	QRegExp m_hexTextExp;
-	QRegExp m_binTextExp;
-
-    void enablePortSelection(const bool enable);
-    void enableConnect(const bool enable);
-    void enableRx(const bool enable);
-	void enableTx(const bool enable);
 
 public:
     struct StringValue {
@@ -59,4 +45,25 @@ private slots:
 	void historyEntrySelected();
     void sendText();
     void receiveText();
+
+private:
+	const char * m_version = "1.0";
+    QSerialPortInfo m_portInfo;
+    QSerialPort m_port;
+    QTimer m_timer;
+	QIntValidator * m_baudRateValidator;
+	QStringList m_sendHistory;
+
+	QRegularExpression m_hexTextExp;
+	QRegularExpression m_binTextExp;
+    QRegularExpression m_consoleColorExp;
+
+    static const QString HexTextExpString;
+    static const QString BinTextExpString;
+    static const QString ConsoleColorExpString;
+
+    void enablePortSelection(const bool enable);
+    void enableConnect(const bool enable);
+    void enableRx(const bool enable);
+	void enableTx(const bool enable);
 };

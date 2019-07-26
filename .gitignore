@@ -1,7 +1,16 @@
-#build file folder
+# build folders
 build
 Debug
 Release
+.vscode
+
+# build files
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+scpspt
+*.depends
 
 # Windows image file caches
 Thumbs.db
